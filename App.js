@@ -3,12 +3,14 @@ import React, { useEffect } from 'react';
 import { StyleSheet, Button, View } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
+
 //expo-permissions has been deprecated.
 // import * as Permissions from 'expo-permissions';
 Notifications.setNotificationHandler({
 handleNotification: () =>{
   return {
     shouldShowAlert:true,
+    
   };
 }
 });
@@ -23,31 +25,52 @@ export default function App() {
         return statusObj;
       })
       .then((statusObj) => {
+        console.log(statusObj);
         if (statusObj.status !== 'granted') {
-          return;
+          throw new Error("Permission not granted !");
         }
-      });
+      })
+      .then(()=>{
+        return Notifications.getExpoPushTokenAsync();
+      })
+      .then(responce =>{
+        console.log(responce.data);
+      })
+      .catch((err)=>{
+        console.log(err);
+        return null;
+      })
   }, []);
 
   useEffect(()=>{
-     const subscription = Notifications.addNotificationReceivedListener(notification => {
-        console.log(notification);
+    const backgroundSubscription= Notifications.addNotificationResponseReceivedListener(
+       response =>{
+         console.log("Response objesi",response);
+       }
+    );
+     const foregroundSubscription = Notifications.addNotificationReceivedListener(notification => {
+        console.log("Notification Objesi",notification);
       });
       return () =>{
-        subscription.remove();
+        backgroundSubscription.remove();
+        foregroundSubscription.remove();
+
       }
   },[]);
 
   const triggerNotificationHandler = () => {
-    Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'My first local notification',
-        body: 'This is the first local notification we are sending!',
-      },
-      trigger: {
-        seconds: 2,
-      },
-    });
+    //This block is local push notification
+
+    // Notifications.scheduleNotificationAsync({
+    //   content: {
+    //     title: 'My first local notification',
+    //     body: 'This is the first local notification we are sending!',
+    //   },
+    //   trigger: {
+    //     seconds: 2,
+    //   },
+    // });
+
   };
 
   return (
