@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect } from 'react';
+import React, { useEffect,useState } from 'react';
 import { StyleSheet, Button, View } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
@@ -16,6 +16,7 @@ handleNotification: () =>{
 });
 
 export default function App() {
+  const [pushToken,setpushToken] = useState();
   useEffect(() => {
     Notifications.getPresentedNotificationsAsync()
       .then((statusObj) => {
@@ -33,8 +34,10 @@ export default function App() {
       .then(()=>{
         return Notifications.getExpoPushTokenAsync();
       })
-      .then(responce =>{
-        console.log(responce.data);
+      .then(response =>{
+        const token = response.data;
+        setpushToken(token);
+        console.log(token);
       })
       .catch((err)=>{
         console.log(err);
@@ -59,7 +62,7 @@ export default function App() {
   },[]);
 
   const triggerNotificationHandler = () => {
-    //This block is local push notification
+    // This block is local push notification
 
     // Notifications.scheduleNotificationAsync({
     //   content: {
@@ -70,6 +73,17 @@ export default function App() {
     //     seconds: 2,
     //   },
     // });
+
+    fetch("https://exp.host/--/api/v2/push/send",{
+      method:"POST",
+      header:{"Accept":"application/json", "Accept-Encoding":"gzip, deflate","Content-Type":"application/json"},
+      body: JSON.stringify({
+        to: pushToken,
+        data:{extraData:"Some data"},
+        title:"Sent via the app",
+        body:"This push notification was sent via the app!"
+      })
+    });
 
   };
 
